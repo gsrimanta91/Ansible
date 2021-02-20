@@ -1,0 +1,10 @@
+--- # My Variable playbook
+- hosts: demo
+  user: ansible
+  become: yes
+  connection: ssh
+  vars:
+     pkgname: httpd
+  tasks:
+     - name: install https server
+       action: yum name="{{pkgname}}" state=present
