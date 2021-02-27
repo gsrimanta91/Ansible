@@ -1,0 +1,12 @@
+--- #conditions
+ - hosts: demo
+   user: ansible
+   become: yes
+   connection: ssh
+   tasks:
+         - name: Install apache server 
+           command: yum -y install httpd
+           when: ansible_os_family == "CentOs"
+         - name: Install apache server
+           command: yum -y install httpd
+           when: ansible_os_family == "RedHat"
