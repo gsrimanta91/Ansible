@@ -1,0 +1,9 @@
+---
+- hosts: demo
+  user: ansible
+  become: yes
+  tasks: 
+   -  name: Install SSSD and related
+      yum: pkg={{ item }} state=present
+      with_items:
+        - samba

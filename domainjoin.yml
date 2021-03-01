@@ -1,0 +1,47 @@
+--- # domain join
+- hosts: demo
+  user: ansible
+  become: yes
+  connection: ssh
+  vars_prompt:
+    - name: "bind_password"
+      prompt: "Password for experionadmin"
+      private: yes
+  tasks:
+    - name: Install SSSD and related
+      yum: pkg={{ item }} state=present
+      with_items:
+             - adcli
+             - sssd
+             - realmd
+             - oddjob
+             - oddjob-mkhomedir
+             - samba-common
+             - samba-common-tools
+             - krb5-workstation
+             - openldap-clients
+             - policycoreutils-python
+             - ntpdate
+    - name: Copy over working sssd.conf
+      template: src=/etc/sssd/sssd.conf dest=/etc/sssd/sssd.conf group=root mode=700 owner=root
+      notify: restart sssd
+    - name: Copy over working krb5.config
+      template: src=/etc/krb5.conf dest=/etc/krb5.conf group=root mode=700 owner=root
+      notify: restart krb5kdc.service
+    - name: Join system to AD and put the computer object in the Linux OU
+       expect:
+         command: /bin/bash -c "/usr/sbin/realm join --user=experionadmin VEPSYSTEM.COM"
+         responses:
+            Password for *: "{{ bind_password }}"
+    - name: Add the LinuxAdmins AD Group to sudoers
+      lineinfile:
+        dest: /etc/sudoers
+        line: '%VEPDOMAIN\\Linux_Admin ALL=(ALL)       NOPASSWD: ALL'
+        insertafter: '^%wheel'
+  handlers:
+    - name: restart sssd
+      service: name=sssd state=started enabled=yes
+    - name: restart krb5kdc.service
+      service: name=krb5kdc state=started enabled=yes
+    - name: restart realmd
+      service: name=realmd state=started enabled=yes    
